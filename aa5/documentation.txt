@@ -1,0 +1,118 @@
+Data Structures Used:
+
+1 : Message
+
+		This holds data related to a single message along with its size. It is used to store the complex message that is received in one or more receive calls or is used to break and be sent in one or more send calls chunk by chunk.
+
+Struct:
+
+typedef struct
+{
+    char *data;
+    int size;
+} message;
+
+
+2 : Table
+		This holds at max 10 messages at any point of time and is used to implement the send table and receive table.Along with the array of messages we have 3 integer parameters in the table namely front, back and size.
+				The size parameter holds the number of messages being held at that point of time in the table.The insertion of messages happens at the index back of the messages array and deletion happens from the index front.
+
+Struct:
+
+typedef struct
+{
+    int front;
+    int back;
+    int size;
+    message msgs[10];
+} table;
+
+
+Functions with Description:
+
+int my_socket:
+				Here we firstly create the socket and later initialise the parameters of the receive table and send table.Later we initiate both R and S threads here.
+
+
+void add_to_send_buffer:
+				Here we add the message into the send table.
+
+void add_to_recv_buffer:
+				Here we add the message into the recv table.
+
+char* delete_from_send_buffer:
+				Here we delete the message from the send table and return it.
+
+char* delete_from_recv_buffer:
+				Here we delete the message from the recv table and return it.
+
+int my_bind:
+				Here we bind the socket to the server address.
+
+int my_listen:
+				Here  we run the listen call by restricting the number of connections made by server.
+
+int my_acceptL
+				Here we run the accept call and return the new sock descriptor.
+
+int my_connect:
+				Here we implemented the connect call.
+
+int my_send:
+				Here we receive the parameters similar to send call. We store the buffer into the message first and later add it to the send table.
+
+int my_recv:
+				Here we receive the parameters similar to the recv call. We first check if there is any message in the receive table and if we find, we print the message after deleting from table.
+
+int my_close:
+				Here we close the sockets first. Terminate the R and S threads, and finally free the tables.
+ 
+void send_string:
+				Here we are sending the message in a single or multiple send calls.
+
+void *run_s:
+				This is the function that executes the S thread.
+
+void receive_string:
+				Here we first receive the message in a single or multiple recv calls and later we push the complete received message into the recv table.
+
+void *run_r:
+				This the function that implements the R thread.
+
+
+
+
+Sequence of Operations happening when my_send() is called:
+
+
+->First the character array is stored into a message with its length stored into the size of message.
+->Later we check if the size of the send table is less than 10.
+->If not we keep of checking until it is less than 10.
+->Or else we push the message into the table at the index back using add_to_send_buffer() and return.
+-> Now we have the thread R that is active and keeps on checking for messages in the send table periodically.
+-> So, when this finds the messages that are pushed into the send table, it starts sending the messages using the function send_string().
+-> When the message is sent it will also be deleted from the table using the function delete_from_send_buffer().
+->If there are no messages to be sent the three goes back to sleep.
+
+This way the messages are sent using g the my_send() call.
+
+
+Sequence of Operations happening when my_recv() is called:
+
+
+->After the my_accept call is made, we store the newsockfd and start trying to receive from that socket.
+->The thread R is always active and keeps on checking if there is any message to be received unless the table is full.
+->If the table is full we wait until it has space to accommodate the new message.
+->Or else we store the couple message received in one or multiple recv calls in the table using the call add_to recv_buffer().
+-> Now when the my_recv() call is made, we first check for the size of table.
+-> If there are messages in the table we retrieve the message and print it.
+-> When the message is printed it will also be deleted from the table using the function delete_from_recv_buffer().
+->If there are no messages to be sent the three goes back to checking until there is a message.
+
+This way the messages are received  using g the my_recv() call.
+
+Note:
+		When ever the the data in a table is accessed for the purpose of editing, the mutex locks are implemented.
+
+
+
